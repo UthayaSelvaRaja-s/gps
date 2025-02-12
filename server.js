@@ -116,49 +116,93 @@
 // });
 
 
+// const express = require("express");
+// const mysql = require("mysql2");
+// const cors = require("cors");
+
+// const app = express();
+// app.use(cors());
+// app.use(express.json()); // Parse JSON requests
+
+// // ✅ MySQL Database (InfinityFree)
+// const db = mysql.createConnection({
+//     host: "sql311.infinityfree.com",  // InfinityFree Hostname
+//     user: "if0_38298795",             // MySQL Username
+//     password: "X4BnuSOskcobS",        // MySQL Password
+//     database: "if0_38298795_gps_tracker_db",     // Database Name
+// });
+
+// // ✅ Connect to MySQL
+// db.connect((err) => {
+//     if (err) {
+//         console.error("❌ Database connection failed:", err.message);
+//         return;
+//     }
+//     console.log("✅ Connected to MySQL!");
+// });
+
+// // 📌 Save GPS data to MySQL
+// app.post("/gps", (req, res) => {
+//     const { device_id, latitude, longitude, altitude } = req.body;
+    
+//     if (!latitude || !longitude) {
+//         return res.status(400).json({ error: "Latitude & Longitude required!" });
+//     }
+
+//     const query = "INSERT INTO gps_data (device_id, latitude, longitude, altitude) VALUES (?, ?, ?, ?)";
+//     db.query(query, [device_id, latitude, longitude, altitude], (err, result) => {
+//         if (err) {
+//             console.error("❌ Database error:", err);
+//             return res.status(500).json({ error: "Database error" });
+//         }
+//         res.json({ success: true, message: "GPS data stored!" });
+//     });
+// });
+
+// // ✅ Start Server (Deploy to Render/Railway)
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
 const express = require("express");
 const mysql = require("mysql2");
-const cors = require("cors");
+const bodyParser = require("body-parser");
 
 const app = express();
-app.use(cors());
-app.use(express.json()); // Parse JSON requests
+app.use(bodyParser.json());
 
-// ✅ MySQL Database (InfinityFree)
 const db = mysql.createConnection({
-    host: "sql311.infinityfree.com",  // InfinityFree Hostname
-    user: "if0_38298795",             // MySQL Username
-    password: "X4BnuSOskcobS",        // MySQL Password
-    database: "if0_38298795_gps_tracker_db",     // Database Name
+  host: "sql311.infinityfree.com",  // Your InfinityFree MySQL hostname
+  user: "if0_38298795",             // Your InfinityFree MySQL username
+  password: "X4BnuSOskcobS",        // Your InfinityFree MySQL password
+  database: "if0_38298795_gps_tracker_db",     // Your InfinityFree MySQL database name
 });
 
-// ✅ Connect to MySQL
 db.connect((err) => {
+  if (err) {
+    console.error("❌ Database connection failed:", err.message);
+  } else {
+    console.log("✅ Connected to MySQL Database");
+  }
+});
+
+// Route to receive GPS data
+app.post("/api/gps", (req, res) => {
+  const { latitude, longitude, altitude } = req.body;
+
+  if (!latitude || !longitude) {
+    return res.status(400).json({ error: "Missing latitude or longitude" });
+  }
+
+  const sql = "INSERT INTO gps_data (latitude, longitude, altitude) VALUES (?, ?, ?)";
+  db.query(sql, [latitude, longitude, altitude], (err, result) => {
     if (err) {
-        console.error("❌ Database connection failed:", err.message);
-        return;
+      console.error("❌ Insert Error:", err.message);
+      return res.status(500).json({ error: "Database error" });
     }
-    console.log("✅ Connected to MySQL!");
+    res.json({ message: "GPS data stored successfully" });
+  });
 });
 
-// 📌 Save GPS data to MySQL
-app.post("/gps", (req, res) => {
-    const { device_id, latitude, longitude, altitude } = req.body;
-    
-    if (!latitude || !longitude) {
-        return res.status(400).json({ error: "Latitude & Longitude required!" });
-    }
-
-    const query = "INSERT INTO gps_data (device_id, latitude, longitude, altitude) VALUES (?, ?, ?, ?)";
-    db.query(query, [device_id, latitude, longitude, altitude], (err, result) => {
-        if (err) {
-            console.error("❌ Database error:", err);
-            return res.status(500).json({ error: "Database error" });
-        }
-        res.json({ success: true, message: "GPS data stored!" });
-    });
+app.listen(5000, () => {
+  console.log("🚀 Server running on port 5000");
 });
-
-// ✅ Start Server (Deploy to Render/Railway)
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
