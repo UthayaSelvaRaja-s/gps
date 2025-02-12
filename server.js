@@ -1,17 +1,29 @@
 const express = require("express");
 const mysql = require("mysql");
 const cors = require("cors");
+require("dotenv").config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// const db = mysql.createConnection({
+//   host: process.env.DB_HOST,
+//   user: process.env.DB_USER,
+//   password: process.env.DB_PASSWORD,
+//   database: process.env.DB_NAME,
+//   port: process.env.DB_PORT || 3306,
+//   ssl: { rejectUnauthorized: false }, // Needed for some cloud MySQL providers
+// });
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "gps_tracker_db",
-});
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT || 3306,
+    ssl: false, // Disable SSL
+  });
+  
 
 db.connect((err) => {
   if (err) {
@@ -38,6 +50,7 @@ app.get("/update-location", (req, res) => {
   });
 });
 
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
